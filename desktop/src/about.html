@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src 'self' data:">
+  <title data-i18n="about.title">关于 — DeepSeek Harness</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--dsh-bg, #0f1115); color: var(--dsh-fg, #e6e6e6);
+      font-family: var(--dsh-ui-font, system-ui, sans-serif); font-size: var(--dsh-font-size, 14px);
+    }
+    .page { text-align: center; max-width: 560px; padding: 0 28px; }
+    .logo {
+      width: 108px; height: 108px; margin: 0 auto 22px; display: block;
+      /* Place the brand block above the true center of the viewport. */
+      margin-top: -14vh;
+    }
+    h1 { font-size: 28px; margin: 0 0 18px; font-weight: 700; letter-spacing: .02em; }
+    .disclaimer { font-size: 14px; color: var(--dsh-fg-soft, #c9d1dc); margin: 0 0 10px; line-height: 1.6; }
+    .license-note { font-size: 13px; color: var(--dsh-fg-dim, #9aa4b2); margin: 0 0 26px; line-height: 1.6; }
+    .links { display: flex; gap: 18px; justify-content: center; flex-wrap: wrap; }
+    .links a {
+      color: var(--dsh-accent, #4d7cfe); text-decoration: none; font-size: 14px;
+      border: 1px solid var(--dsh-border, #2a2f3a); border-radius: 999px; padding: 8px 18px;
+      background: var(--dsh-bg-card, #161a22);
+    }
+    .links a:hover { border-color: var(--dsh-accent, #4d7cfe); }
+    .meta { margin-top: 34px; font-size: 12px; color: var(--dsh-fg-dim, #6b7484); }
+    .back { margin-top: 22px; }
+    .author { margin-top: 34px; padding-top: 16px; border-top: 1px solid var(--dsh-border, #2a2f3a); font-size: 13px; }
+    .author-label { color: var(--dsh-fg-dim, #9aa4b2); margin-right: 12px; }
+    .author a { color: var(--dsh-fg-soft, #c9d1dc); text-decoration: none; margin: 0 12px; }
+    .author a:hover { color: var(--dsh-accent, #4d7cfe); text-decoration: underline; }
+    button {
+      padding: 9px 22px; border-radius: 8px; border: 1px solid var(--dsh-border, #2a2f3a);
+      background: var(--dsh-bg-card, #161a22); color: var(--dsh-fg, #e6e6e6); cursor: pointer; font-size: 13px;
+    }
+    button:hover { border-color: var(--dsh-border-strong, #3d4e73); }
+    button.primary { background: var(--dsh-accent, #4d7cfe); color: var(--dsh-accent-fg, #fff); border-color: transparent; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <img class="logo" src="../assets/app-icon.png" alt="Deepseek Harness +">
+    <h1>Deepseek Harness +</h1>
+    <p class="disclaimer" data-i18n="about.disclaimer">本程序不隶属于Deepseek Harness和Deepseek Harness Desktop</p>
+    <p class="license-note" data-i18n="about.licenseNote">本程序完全开源，并遵守MIT开源协议</p>
+    <div class="links">
+      <a href="https://github.com/deepseek-ai/deepseek-harness" data-i18n="about.linkHarness">Deepseek Harness GitHub</a>
+      <a href="https://www.deepseek.com/" data-i18n="about.linkSite">Deepseek 官方网站</a>
+    </div>
+    <p class="meta" id="meta"></p>
+    <div class="back">
+      <button id="open-app" class="primary" data-i18n="common.backToApp">返回应用</button>
+    </div>
+    <div class="author">
+      <span class="author-label" data-i18n="about.authorLabel">作者</span>
+      <a href="https://space.bilibili.com/1514544877?spm_id_from=333.1007.0.0" data-i18n="about.authorProfile">个人主页</a>
+      <a href="https://github.com/xianmovo/Deepseek-Harness-Plus" data-i18n="about.authorRepo">项目仓库</a>
+    </div>
+  </div>
+  <script>
+    (function () {
+      var T = {}
+      var currentLang = 'zh'
+      function apply(messages, lang) {
+        if (messages) {
+          T = messages
+          document.querySelectorAll('[data-i18n]').forEach(function (el) {
+            var key = el.getAttribute('data-i18n')
+            if (T[key]) el.textContent = T[key]
+          })
+        }
+        if (lang) { currentLang = lang; document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN' }
+      }
+      window.desktop.getI18n().then(function (res) {
+        apply(res && res.messages, res && res.lang)
+      }).catch(function () {})
+      window.desktop.getAppInfo().then(function (info) {
+        if (!info) return
+        document.getElementById('meta').textContent = 'Deepseek Harness Plus v' + info.version +
+          ' · Electron ' + info.electron + ' / Chrome ' + info.chrome + ' / Node ' + info.node
+      }).catch(function () {})
+      window.desktop.onAppearanceChanged(function (s) {
+        if (s && s.lang && s.lang !== currentLang) {
+          window.desktop.getI18n().then(function (res) {
+            apply(res && res.messages, res && res.lang)
+          }).catch(function () {})
+        }
+      })
+      document.getElementById('open-app').addEventListener('click', function () {
+        window.desktop.openApp()
+      })
+    })()
+  </script>
+</body>
+</html>

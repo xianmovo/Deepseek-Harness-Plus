@@ -1,0 +1,39 @@
+# Electron Builder packaging config for dsh-desktop.
+# Ship only the shell sources, the vendored dsh runtime, and the brand asset.
+# Credentials and user data are NEVER packaged: they live in $HOME/.dsh and
+# %APPDATA% on the end user's machine, and everything that could carry a test
+# key (.env, *.credentials.yaml, logs, tests) is excluded explicitly.
+
+appId: com.deepseek.harness.plus
+productName: Deepseek Harness Plus
+directories:
+  output: ../../DSHP/_win64
+files:
+  - package.json
+  - src/**
+  - assets/**
+  - node_modules/**/*
+  - "!node_modules/electron/**"
+  - "!node_modules/.bin/**"
+  - "!**/*.map"
+  - "!**/*.d.ts"
+  - "!**/test/**"
+  - "!**/tests/**"
+  - "!**/*.credentials.yaml"
+  - "!**/.env*"
+  - "!**/*.log"
+extraResources:
+  - from: assets/app-icon.png
+    to: brand/app-icon.png
+asar: false
+npmRebuild: false
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true

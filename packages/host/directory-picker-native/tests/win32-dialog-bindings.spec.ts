@@ -127,14 +127,9 @@ function installFakeKoffi(world: ComWorld): void {
       proto: (declaration: string) => ({ declaration }),
       pointer: (type: unknown) => type,
       sizeof: (type: string) => { void type; return FAKE_POINTER_SIZE },
-      view: (value: unknown, len: number): ArrayBuffer => {
-        const bytes = Buffer.alloc(len)
-        bytes.write((value as FakePtr).text as string, 'utf16le')
-        return bytes.buffer
-      },
       register: (fn: (hwnd: unknown, lparam: unknown) => number) => { world.registered += 1; return { fn } },
       unregister: () => { world.unregistered += 1 },
-      decode: (value: unknown, offsetOrType: unknown): unknown => {
+      decode: Object.assign((value: unknown, offsetOrType: unknown): unknown => {
         if (offsetOrType === 'str16') return (value as FakePtr).text
         if (typeof offsetOrType === 'number') {
           // Vtable slot read: offsets must be multiples of the fake width.
@@ -145,7 +140,10 @@ function installFakeKoffi(world: ComWorld): void {
         // decode(x, 'void *'): out-buffer read or vtable read.
         if (outBuffers.has(value)) return outBuffers.get(value)
         return { owner: value as FakePtr }
-      },
+      }, {
+        // The bindings read the picked path with the wstring decoder.
+        wstring: (ptr: unknown): string => (ptr as FakePtr).text as string,
+      }),
       call: (fn: { call: (args: unknown[]) => number }, _proto: unknown, _self: unknown, ...args: unknown[]) => fn.call(args),
     },
   }))

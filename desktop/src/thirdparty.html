@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title data-i18n="thirdparty.title">第三方组件与许可 — DeepSeek Harness</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: var(--dsh-bg, #0f1115); color: var(--dsh-fg, #e6e6e6);
+      font-family: var(--dsh-ui-font, system-ui, sans-serif); font-size: var(--dsh-font-size, 14px);
+    }
+    header { display: flex; align-items: center; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--dsh-border, #2a2f3a); }
+    h1 { font-size: 15px; margin: 0; font-weight: 600; }
+    .spacer { flex: 1; }
+    button {
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--dsh-border, #2a2f3a);
+      background: var(--dsh-bg-card, #161a22); color: var(--dsh-fg, #e6e6e6); cursor: pointer; font-size: 12px;
+    }
+    button:hover { border-color: var(--dsh-border-strong, #3d4e73); }
+    button.primary { background: var(--dsh-accent, #4d7cfe); color: var(--dsh-accent-fg, #fff); border-color: transparent; }
+    .page { max-width: 980px; margin: 0 auto; padding: 20px 24px 44px; }
+    .section-title { font-size: 13px; color: var(--dsh-fg-soft, #c9d1dc); font-weight: 600; margin: 26px 0 10px; }
+    .note { color: var(--dsh-fg-dim, #9aa4b2); font-size: 12px; line-height: 1.7; margin: 0 0 12px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th {
+      text-align: left; padding: 8px 10px; color: var(--dsh-fg-dim, #9aa4b2); font-weight: 500;
+      border-bottom: 1px solid var(--dsh-border-strong, #3d4e73); white-space: nowrap;
+    }
+    td { padding: 8px 10px; border-bottom: 1px solid var(--dsh-border, #2a2f3a); vertical-align: top; line-height: 1.5; }
+    td.name { font-family: var(--dsh-mono-font, Consolas, monospace); color: var(--dsh-fg-soft, #c9d1dc); word-break: break-all; }
+    td.ver { white-space: nowrap; color: var(--dsh-fg-dim, #9aa4b2); font-family: var(--dsh-mono-font, Consolas, monospace); }
+    td.lic { white-space: nowrap; color: var(--dsh-accent, #4d7cfe); font-family: var(--dsh-mono-font, Consolas, monospace); }
+    td.desc { color: var(--dsh-fg-dim, #9aa4b2); }
+    td a { color: var(--dsh-accent, #4d7cfe); text-decoration: none; word-break: break-all; }
+    td a:hover { text-decoration: underline; }
+    tr:hover td { background: var(--dsh-bg-hover, #182136); }
+    .empty { text-align: center; color: var(--dsh-fg-dim, #6b7484); padding: 48px 0; }
+    .footnote { margin-top: 22px; font-size: 11px; color: var(--dsh-fg-dim, #6b7484); line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 data-i18n="thirdparty.heading">第三方组件与许可</h1>
+    <span class="spacer"></span>
+    <button id="open-app" class="primary" data-i18n="common.backToApp">返回应用</button>
+  </header>
+  <div class="page">
+    <p class="note" data-i18n="thirdparty.note">本页列出 Deepseek Harness Plus 使用的主要第三方组件与预装插件；完整依赖树均为宽松许可证（MIT / Apache-2.0 / BSD / ISC 等）。点击链接可查看各项目主页与许可证原文。</p>
+    <div class="section-title" data-i18n="thirdparty.runtime">运行时组件（随安装包分发）</div>
+    <table id="runtime-table">
+      <thead>
+        <tr>
+          <th data-i18n="thirdparty.colName">名称</th>
+          <th data-i18n="thirdparty.colVersion">版本</th>
+          <th data-i18n="thirdparty.colLicense">许可证</th>
+          <th data-i18n="thirdparty.colDesc">说明</th>
+          <th data-i18n="thirdparty.colLink">链接</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div class="section-title" data-i18n="thirdparty.plugins">预装插件（首次启动自动安装到用户目录）</div>
+    <table id="plugin-table">
+      <thead>
+        <tr>
+          <th data-i18n="thirdparty.colName">名称</th>
+          <th data-i18n="thirdparty.colVersion">版本</th>
+          <th data-i18n="thirdparty.colLicense">许可证</th>
+          <th data-i18n="thirdparty.colDesc">说明</th>
+          <th data-i18n="thirdparty.colLink">链接</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <p class="footnote" data-i18n="thirdparty.footnote">* sharp 的预编译二进制捆绑 libvips（LGPL-3.0-or-later），随安装包分发时需履行 LGPL 义务（保留许可文本并提供可重链接方式或说明）。本程序在 MIT 协议下开源；各第三方组件版权归其各自作者所有。</p>
+  </div>
+  <script>
+    (function () {
+      var T = {}
+      var currentLang = 'zh'
+      function tr(key) { return T[key] || key }
+      function apply(messages, lang) {
+        if (messages) T = messages
+        if (lang) { currentLang = lang; document.documentElement.lang = lang === 'en' ? 'en' : 'zh-CN' }
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+          var key = el.getAttribute('data-i18n')
+          if (T[key]) el.textContent = T[key]
+        })
+        reRender()
+      }
+      var lastItems = null
+      function fill(tableId, items) {
+        var tbody = document.querySelector(tableId + ' tbody')
+        tbody.innerHTML = ''
+        items.forEach(function (item) {
+          var row = document.createElement('tr')
+          var name = document.createElement('td'); name.className = 'name'; name.textContent = item.name
+          var ver = document.createElement('td'); ver.className = 'ver'; ver.textContent = item.version || '—'
+          var lic = document.createElement('td'); lic.className = 'lic'; lic.textContent = item.license
+          var desc = document.createElement('td'); desc.className = 'desc'; desc.textContent = currentLang === 'en' ? item.en : item.zh
+          var linkTd = document.createElement('td')
+          if (item.link) {
+            var a = document.createElement('a')
+            a.href = item.link
+            a.target = '_blank'
+            a.rel = 'noopener'
+            a.textContent = new URL(item.link).hostname
+            linkTd.appendChild(a)
+          } else {
+            linkTd.textContent = '—'
+          }
+          row.appendChild(name); row.appendChild(ver); row.appendChild(lic); row.appendChild(desc); row.appendChild(linkTd)
+          tbody.appendChild(row)
+        })
+      }
+      function reRender() {
+        if (!lastItems) return
+        fill('#runtime-table', lastItems.filter(function (x) { return x.category === 'runtime' }))
+        fill('#plugin-table', lastItems.filter(function (x) { return x.category === 'plugin' }))
+      }
+      window.desktop.getI18n().then(function (res) {
+        apply(res && res.messages, res && res.lang)
+      }).catch(function () {})
+      window.desktop.getThirdParty().then(function (res) {
+        lastItems = (res && res.items) || []
+        reRender()
+      }).catch(function () {})
+      window.desktop.onAppearanceChanged(function (s) {
+        if (s && s.lang && s.lang !== currentLang) {
+          window.desktop.getI18n().then(function (res) {
+            apply(res && res.messages, res && res.lang)
+          }).catch(function () {})
+        }
+      })
+      document.getElementById('open-app').addEventListener('click', function () {
+        window.desktop.openApp()
+      })
+    })()
+  </script>
+</body>
+</html>

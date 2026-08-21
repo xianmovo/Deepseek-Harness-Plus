@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title data-i18n="wizard.title">选择使用场景 — DeepSeek Harness</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; background: var(--dsh-bg, #0f1115); color: var(--dsh-fg, #e6e6e6);
+      font-family: var(--dsh-ui-font, system-ui, sans-serif); font-size: var(--dsh-font-size, 14px);
+      display: flex; align-items: center; justify-content: center; padding: 40px 24px;
+    }
+    .page { width: 100%; max-width: 880px; }
+    header { text-align: center; margin-bottom: 28px; }
+    .brand {
+      display: inline-flex; align-items: center; gap: 10px; font-size: 13px;
+      color: var(--dsh-fg-dim, #9aa4b2); letter-spacing: .12em;
+    }
+    .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--dsh-accent, #4d7cfe); box-shadow: 0 0 12px var(--dsh-accent, #4d7cfe)88; }
+    h1 { font-size: 26px; margin: 14px 0 8px; }
+    header p { color: var(--dsh-fg-dim, #9aa4b2); margin: 0 auto; max-width: 600px; line-height: 1.6; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+    .card {
+      position: relative; text-align: left; padding: 18px 18px 16px; cursor: pointer;
+      background: var(--dsh-bg-card, #161a22); border: 1px solid var(--dsh-border, #2a2f3a); border-radius: 12px;
+      color: inherit; font: inherit; transition: border-color .15s, background .15s, transform .15s;
+    }
+    .card:hover { border-color: var(--dsh-border-strong, #3d4e73); transform: translateY(-2px); }
+    .card.selected { border-color: var(--dsh-accent, #4d7cfe); background: var(--dsh-bg-hover, #182136); box-shadow: 0 0 0 1px var(--dsh-accent, #4d7cfe)66, 0 8px 24px var(--dsh-accent, #4d7cfe)22; }
+    .card .badge {
+      position: absolute; top: 12px; right: 12px; font-size: 11px; padding: 2px 8px;
+      border-radius: 999px; background: var(--dsh-accent-soft, #4d7cfe22); color: var(--dsh-accent, #4d7cfe); border: 1px solid var(--dsh-accent, #4d7cfe)55;
+    }
+    .card h2 { margin: 0 0 6px; font-size: 16px; }
+    .card .desc { color: var(--dsh-fg-dim, #9aa4b2); font-size: 13px; line-height: 1.55; min-height: 40px; margin: 0 0 10px; }
+    .card ul { list-style: none; margin: 0; padding: 0; }
+    .card li { font-size: 12px; color: var(--dsh-fg-soft, #c9d1dc); padding: 3px 0 3px 18px; position: relative; }
+    .card li::before { content: "✓"; position: absolute; left: 0; color: var(--dsh-accent, #4d7cfe); font-size: 11px; top: 4px; }
+    footer { margin-top: 26px; display: flex; align-items: center; gap: 20px; justify-content: center; }
+    #continue {
+      padding: 12px 34px; border: 0; border-radius: 10px; background: var(--dsh-accent, #4d7cfe); color: var(--dsh-accent-fg, #fff);
+      font-size: 15px; cursor: pointer;
+    }
+    #continue:disabled { background: var(--dsh-border, #2a2f3a); color: var(--dsh-fg-dim, #6b7484); cursor: not-allowed; }
+    #skip { background: none; border: 0; color: var(--dsh-fg-dim, #6b7484); font-size: 13px; cursor: pointer; text-decoration: underline; }
+    #skip:hover { color: var(--dsh-fg-dim, #9aa4b2); }
+    #skip:disabled { cursor: not-allowed; opacity: .6; }
+    .err { color: var(--dsh-danger, #ff8f8f); text-align: center; margin-top: 14px; font-size: 13px; min-height: 18px; }
+    .apikey {
+      margin: 0 0 20px; padding: 16px 18px; text-align: left;
+      background: var(--dsh-bg-card, #161a22); border: 1px solid var(--dsh-border, #2a2f3a); border-radius: 12px;
+    }
+    .apikey-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .apikey h2 { margin: 0; font-size: 15px; }
+    .apikey p { margin: 6px 0 12px; color: var(--dsh-fg-dim, #9aa4b2); font-size: 13px; line-height: 1.55; }
+    .apikey-status { font-size: 12px; color: var(--dsh-fg-dim, #9aa4b2); }
+    .apikey-status.ok { color: #22b573; }
+    .apikey-row { display: flex; gap: 10px; }
+    #apiKeyInput {
+      flex: 1; min-width: 0; padding: 10px 12px; border-radius: 8px; color: var(--dsh-fg, #e6e6e6);
+      background: var(--dsh-bg-hover, #182136); border: 1px solid var(--dsh-border, #2a2f3a); font: inherit;
+    }
+    #apiKeyInput:focus { outline: none; border-color: var(--dsh-accent, #4d7cfe); }
+    #toggleKey, #saveKey {
+      padding: 0 16px; border-radius: 8px; cursor: pointer; font: inherit; font-size: 13px;
+      background: var(--dsh-bg-hover, #182136); border: 1px solid var(--dsh-border, #2a2f3a); color: var(--dsh-fg, #e6e6e6);
+    }
+    #saveKey { background: var(--dsh-accent, #4d7cfe); border-color: var(--dsh-accent, #4d7cfe); color: var(--dsh-accent-fg, #fff); }
+    #saveKey:disabled { opacity: .6; cursor: not-allowed; }
+    #apiKeyErr { margin-top: 10px; min-height: 16px; font-size: 12px; color: var(--dsh-danger, #ff8f8f); }
+    #apiKeyErr.ok { color: #22b573; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <div class="brand"><span class="dot"></span>dsh-desktop</div>
+      <h1 data-i18n="wizard.heading">选择你的使用场景</h1>
+      <p data-i18n="wizard.sub">桌面版会按场景为你预装一组插件与配置。之后随时可以编辑配置文件或重新选择场景，不影响已有会话。</p>
+    </header>
+    <section class="apikey">
+      <div class="apikey-head">
+        <h2 data-i18n="wizard.apiKey.heading">DeepSeek API Key</h2>
+        <span class="apikey-status" id="apiKeyStatus">检测中…</span>
+      </div>
+      <p data-i18n="wizard.apiKey.desc">首次使用需要 API Key 才能调用模型。可在这里填写，之后也能随时在应用设置里修改。</p>
+      <div class="apikey-row" id="apiKeyRow">
+        <input id="apiKeyInput" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false">
+        <button type="button" id="toggleKey" data-i18n="wizard.apiKey.show">显示</button>
+        <button type="button" id="saveKey" data-i18n="wizard.apiKey.save">保存</button>
+      </div>
+      <div class="err" id="apiKeyErr"></div>
+    </section>
+    <main class="grid" id="grid"></main>
+    <footer>
+      <button id="continue" disabled data-i18n="wizard.continue">继续启动</button>
+      <button id="skip" data-i18n="wizard.skip">先跳过，用默认配置</button>
+    </footer>
+    <div class="err" id="err"></div>
+  </div>
+  <script>
+    (function () {
+      var selected = null
+      var continueBtn = document.getElementById('continue')
+      var err = document.getElementById('err')
+      var T = {}
+      var currentLang = 'zh'
+
+      function tr(key, params) {
+        var text = T[key] || key
+        if (params) {
+          for (var name in params) {
+            text = text.split('{' + name + '}').join(String(params[name]))
+          }
+        }
+        return text
+      }
+
+      function applyStatic() {
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+          var key = el.getAttribute('data-i18n')
+          if (T[key]) el.textContent = T[key]
+        })
+        document.documentElement.lang = currentLang === 'en' ? 'en' : 'zh-CN'
+        if (apiKeyInput && apiKeyInput.type === 'text') {
+          toggleKeyBtn.textContent = tr('wizard.apiKey.hide')
+        }
+      }
+
+      function escapeHtml(text) {
+        return String(text).replace(/[&<>"']/g, function (ch) {
+          return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]
+        })
+      }
+
+      function render(scenarios) {
+        var grid = document.getElementById('grid')
+        grid.innerHTML = ''
+        var isEn = currentLang === 'en'
+        scenarios.forEach(function (s) {
+          var label = isEn ? (s.labelEn || s.label) : s.label
+          var desc = isEn ? (s.descriptionEn || s.description) : s.description
+          var features = isEn ? (s.featuresEn || s.features) : s.features
+          var card = document.createElement('button')
+          card.className = 'card'
+          card.type = 'button'
+          card.setAttribute('data-id', s.id)
+
+          var badge = s.recommended ? '<span class="badge">' + tr('wizard.recommended') + '</span>' : ''
+          var featureHtml = features.map(function (f) { return '<li>' + escapeHtml(f) + '</li>' }).join('')
+          card.innerHTML =
+            badge +
+            '<h2>' + escapeHtml(label) + '</h2>' +
+            '<p class="desc">' + escapeHtml(desc) + '</p>' +
+            '<ul>' + featureHtml + '</ul>'
+
+          card.addEventListener('click', function () {
+            var cards = document.querySelectorAll('.card.selected')
+            for (var i = 0; i < cards.length; i++) cards[i].classList.remove('selected')
+            card.classList.add('selected')
+            selected = s.id
+            continueBtn.disabled = false
+          })
+          grid.appendChild(card)
+        })
+        var recommended = null
+        for (var i = 0; i < scenarios.length; i++) {
+          if (scenarios[i].recommended) { recommended = scenarios[i]; break }
+        }
+        if (recommended) {
+          var first = grid.querySelector('[data-id="' + recommended.id + '"]')
+          if (first) first.click()
+        }
+      }
+
+      continueBtn.addEventListener('click', function () {
+        if (!selected) return
+        continueBtn.disabled = true
+        window.desktop.selectScenario(selected).then(function (result) {
+          if (!result.ok) { err.textContent = result.error; continueBtn.disabled = false }
+        })
+      })
+
+      document.getElementById('skip').addEventListener('click', function () {
+        var skipBtn = document.getElementById('skip')
+        skipBtn.disabled = true
+        window.desktop.skipWizard().then(function (result) {
+          if (!result.ok) { err.textContent = result.error; skipBtn.disabled = false }
+        })
+      })
+
+      var apiKeyInput = document.getElementById('apiKeyInput')
+      var apiKeyErr = document.getElementById('apiKeyErr')
+      var apiKeyStatus = document.getElementById('apiKeyStatus')
+      var apiKeyRow = document.getElementById('apiKeyRow')
+      var toggleKeyBtn = document.getElementById('toggleKey')
+      var saveKeyBtn = document.getElementById('saveKey')
+
+      function refreshKeyState() {
+        window.desktop.getCredentials().then(function (state) {
+          if (state.configured) {
+            apiKeyStatus.textContent = tr('wizard.apiKey.configured', { masked: state.masked || '***' })
+            apiKeyStatus.className = 'apikey-status ok'
+            apiKeyRow.style.display = 'none'
+          } else {
+            apiKeyStatus.textContent = tr('wizard.apiKey.notConfigured')
+            apiKeyStatus.className = 'apikey-status'
+            apiKeyRow.style.display = ''
+          }
+        }).catch(function () {
+          apiKeyStatus.textContent = tr('wizard.apiKey.unavailable')
+          apiKeyStatus.className = 'apikey-status'
+        })
+      }
+
+      toggleKeyBtn.addEventListener('click', function () {
+        var showing = apiKeyInput.type === 'text'
+        apiKeyInput.type = showing ? 'password' : 'text'
+        toggleKeyBtn.textContent = showing ? tr('wizard.apiKey.show') : tr('wizard.apiKey.hide')
+      })
+
+      saveKeyBtn.addEventListener('click', function () {
+        var key = apiKeyInput.value.trim()
+        apiKeyErr.textContent = ''
+        apiKeyErr.className = 'err'
+        if (!key) { apiKeyErr.textContent = tr('wizard.apiKey.required'); return }
+        saveKeyBtn.disabled = true
+        window.desktop.setCredentials(key).then(function (result) {
+          saveKeyBtn.disabled = false
+          if (result.ok) {
+            apiKeyInput.value = ''
+            apiKeyErr.textContent = tr('wizard.apiKey.saved')
+            apiKeyErr.className = 'err ok'
+            refreshKeyState()
+          } else {
+            apiKeyErr.textContent = result.error
+          }
+        }).catch(function (e) {
+          saveKeyBtn.disabled = false
+          apiKeyErr.textContent = tr('wizard.apiKey.saveFailed') + e.message
+        })
+      })
+
+      function init() {
+        window.desktop.getI18n().then(function (res) {
+          if (res) { T = res.messages || {}; currentLang = res.lang || 'zh' }
+          applyStatic()
+          refreshKeyState()
+          return window.desktop.getScenarios()
+        }).then(render).catch(function (e) {
+          err.textContent = tr('wizard.loadFailed') + e.message
+        })
+      }
+
+      init()
+
+      window.desktop.onAppearanceChanged(function (s) {
+        if (!s || !s.lang || s.lang === currentLang) return
+        window.desktop.getI18n().then(function (res) {
+          if (res) { T = res.messages || {}; currentLang = res.lang || 'zh' }
+          applyStatic()
+          refreshKeyState()
+          return window.desktop.getScenarios()
+        }).then(render).catch(function () {})
+      })
+    })()
+  </script>
+</body>
+</html>
