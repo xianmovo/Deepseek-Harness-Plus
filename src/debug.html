@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title data-i18n="debug.title">调试日志 — DeepSeek Harness</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; height: 100vh; display: flex; flex-direction: column;
+      background: var(--dsh-bg, #0f1115); color: var(--dsh-fg, #e6e6e6);
+      font-family: var(--dsh-ui-font, system-ui, sans-serif); font-size: var(--dsh-font-size, 14px);
+    }
+    header { display: flex; align-items: center; gap: 12px; padding: 10px 18px; border-bottom: 1px solid var(--dsh-border, #2a2f3a); }
+    h1 { font-size: 15px; margin: 0; font-weight: 600; }
+    .status { font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--dsh-border, #2a2f3a); color: var(--dsh-fg-dim, #9aa4b2); }
+    .status.running { color: #4ade80; border-color: #4ade8055; background: #4ade8011; }
+    .status.stopped { color: var(--dsh-danger, #ff8f8f); border-color: var(--dsh-danger, #ff8f8f)55; }
+    .spacer { flex: 1; }
+    button {
+      padding: 6px 14px; border-radius: 8px; border: 1px solid var(--dsh-border, #2a2f3a);
+      background: var(--dsh-bg-card, #161a22); color: var(--dsh-fg, #e6e6e6); cursor: pointer; font-size: 12px;
+    }
+    button:hover { border-color: var(--dsh-border-strong, #3d4e73); }
+    button.primary { background: var(--dsh-accent, #4d7cfe); color: var(--dsh-accent-fg, #fff); border-color: transparent; }
+    button.danger:hover { border-color: var(--dsh-danger, #ff8f8f); color: var(--dsh-danger, #ff8f8f); }
+    .meta { display: flex; flex-wrap: wrap; gap: 4px 20px; padding: 8px 18px; font-size: 12px; color: var(--dsh-fg-dim, #9aa4b2); border-bottom: 1px solid var(--dsh-border, #2a2f3a); }
+    .meta b { color: var(--dsh-fg-soft, #c9d1dc); font-weight: 500; }
+    .meta code { color: var(--dsh-fg-soft, #c9d1dc); font-family: var(--dsh-mono-font, Consolas, monospace); }
+    .log { flex: 1; overflow: auto; margin: 0; padding: 10px 18px; font-family: var(--dsh-mono-font, Consolas, monospace); font-size: 12px; line-height: 1.6; }
+    .line { display: flex; gap: 8px; align-items: baseline; }
+    .time { color: var(--dsh-fg-dim, #6b7484); flex: none; }
+    .kind { flex: none; width: 32px; text-align: center; border-radius: 4px; font-size: 11px; }
+    .kind.out { color: #4ade80; }
+    .kind.err { color: var(--dsh-danger, #ff8f8f); }
+    .kind.sys { color: #7fb2ff; }
+    .text { flex: 1; white-space: pre-wrap; word-break: break-all; }
+    .empty { text-align: center; color: var(--dsh-fg-dim, #6b7484); padding: 48px 0; }
+    footer { display: flex; align-items: center; gap: 16px; padding: 8px 18px; border-top: 1px solid var(--dsh-border, #2a2f3a); font-size: 12px; color: var(--dsh-fg-dim, #9aa4b2); }
+    footer label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 data-i18n="debug.heading">调试日志</h1>
+    <span class="status" id="status">读取中&hellip;</span>
+    <span class="spacer"></span>
+    <button id="copy" data-i18n="debug.copy">复制日志</button>
+    <button id="open-log" data-i18n="debug.openLog">打开日志文件</button>
+    <button id="clear" data-i18n="debug.clear">清空</button>
+    <button id="restart" class="danger" data-i18n="debug.restart">重启服务器</button>
+    <button id="open-app" class="primary" data-i18n="common.backToApp">返回应用</button>
+  </header>
+  <div class="meta" id="meta"></div>
+  <pre class="log" id="log"><div class="empty" data-i18n="debug.empty">暂无日志</div></pre>
+  <footer>
+    <label><input type="checkbox" id="autoscroll" checked> <span data-i18n="debug.autoscroll">自动滚动到最新</span></label>
+    <span id="count"></span>
+  </footer>
+  <script>
+    (function () {
+      var logEl = document.getElementById('log')
+      var statusEl = document.getElementById('status')
+      var metaEl = document.getElementById('meta')
+      var countEl = document.getElementById('count')
+      var autoScroll = document.getElementById('autoscroll')
+      var T = {}
+      var currentLang = 'zh'
+      var lastState = null
+      var lastCount = 0
+
+      function tr(key, params) {
+        var text = T[key] || key
+        if (params) {
+          for (var name in params) {
+            text = text.split('{' + name + '}').join(String(params[name]))
+          }
+        }
+        return text
+      }
+
+      function applyStatic() {
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+          var key = el.getAttribute('data-i18n')
+          if (T[key]) el.textContent = T[key]
+        })
+        if (currentLang) document.documentElement.lang = currentLang === 'en' ? 'en' : 'zh-CN'
+        renderMeta()
+      }
+
+      function renderMeta() {
+        if (!lastState) return
+        statusEl.textContent = lastState.running ? tr('debug.running') : (lastState.pid ? tr('debug.stopped') : tr('debug.notStarted'))
+        statusEl.className = 'status ' + (lastState.running ? 'running' : 'stopped')
+        metaEl.innerHTML = ''
+        var items = [
+          [tr('debug.meta.pid'), lastState.pid ? String(lastState.pid) : '-'],
+          [tr('debug.meta.url'), lastState.url || '-'],
+          [tr('debug.meta.scenario'), lastState.scenario || '-'],
+          [tr('debug.meta.started'), lastState.startedAt ? new Date(lastState.startedAt).toLocaleTimeString() : '-'],
+        ]
+        items.forEach(function (item) {
+          var span = document.createElement('span')
+          var label = document.createElement('b')
+          label.textContent = item[0] + (currentLang === 'en' ? ': ' : '：')
+          span.appendChild(label)
+          span.appendChild(document.createTextNode(item[1]))
+          metaEl.appendChild(span)
+        })
+        countEl.textContent = tr('debug.count', { count: lastCount })
+      }
+
+      function append(entry) {
+        if (!entry || !entry.text) return
+        if (logEl.firstChild && logEl.firstChild.className === 'empty') logEl.removeChild(logEl.firstChild)
+        var line = document.createElement('div')
+        line.className = 'line'
+
+        var time = document.createElement('span')
+        time.className = 'time'
+        time.textContent = (entry.t || '').slice(11, 19)
+        line.appendChild(time)
+
+        var kind = document.createElement('span')
+        kind.className = 'kind ' + entry.kind
+        kind.textContent = entry.kind
+        line.appendChild(kind)
+
+        var text = document.createElement('span')
+        text.className = 'text'
+        text.textContent = entry.text
+        line.appendChild(text)
+
+        logEl.appendChild(line)
+        if (autoScroll.checked) logEl.scrollTop = logEl.scrollHeight
+      }
+
+      function renderState(s) {
+        lastState = s
+        renderMeta()
+      }
+
+      function init() {
+        window.desktop.getI18n().then(function (res) {
+          if (res) { T = res.messages || {}; currentLang = res.lang || 'zh' }
+          applyStatic()
+          return window.desktop.getDebugState()
+        }).then(function (s) {
+          lastCount = s.count
+          renderState(s)
+          logEl.innerHTML = ''
+          s.logTail.forEach(append)
+          logEl.scrollTop = logEl.scrollHeight
+        }).catch(function () { statusEl.textContent = tr('debug.unavailable') })
+      }
+
+      init()
+
+      window.desktop.onDebugLog(append)
+      setInterval(function () {
+        window.desktop.getDebugState().then(function (s) {
+          lastCount = s.count
+          renderState(s)
+        }).catch(function () {})
+      }, 2000)
+
+      window.desktop.onAppearanceChanged(function (s) {
+        if (!s || !s.lang || s.lang === currentLang) return
+        window.desktop.getI18n().then(function (res) {
+          if (res) { T = res.messages || {}; currentLang = res.lang || 'zh' }
+          applyStatic()
+        }).catch(function () {})
+      })
+
+      document.getElementById('copy').addEventListener('click', function () {
+        window.desktop.copyDebugLog()
+      })
+      document.getElementById('open-log').addEventListener('click', function () {
+        window.desktop.openLogFile()
+      })
+      document.getElementById('clear').addEventListener('click', function () {
+        window.desktop.clearDebugLog().then(function () {
+          logEl.innerHTML = '<div class="empty">' + tr('debug.empty') + '</div>'
+        })
+      })
+      document.getElementById('restart').addEventListener('click', function () {
+        if (confirm(tr('debug.restartConfirm'))) window.desktop.restartServer()
+      })
+      document.getElementById('open-app').addEventListener('click', function () {
+        window.desktop.openApp()
+      })
+    })()
+  </script>
+</body>
+</html>

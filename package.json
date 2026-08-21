@@ -1,0 +1,48 @@
+{
+  "name": "dsh-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "DeepSeek Harness 桌面版（本地 dsh web + Electron 壳）",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "smoke": "electron . --smoke-test",
+    "wizard-check": "electron test/wizard-check.js",
+    "pages-check": "electron test/pages-check.js",
+    "install-wallpaper": "node scripts/install-wallpaper-plugin.js",
+    "install-all-plugins": "node scripts/install-all-plugins.js",
+    "gen-icon": "node scripts/gen-icon.js"
+  },
+  "dependencies": {
+    "@deepseek-ai/dsh": "0.1.0-rc.8",
+    "@deepseek-ai/cordis-plugin-group": "1.0.1",
+    "@deepseek-ai/dsh-anonymous-user-id": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-atomic-write": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-bash-local": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-code-runtime": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-compaction": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-fs": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-invariants": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-output-retention": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-sandbox": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-scope": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-session-telemetry": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-session-title-llm": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-shell": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-spill": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-subagent-in-process-driver": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-timeout": "0.1.0-rc.8",
+    "@deepseek-ai/dsh-workflow": "0.1.0-rc.8"
+  },
+  "devDependencies": {
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3"
+  },
+  "license": "MIT",
+  "allowScripts": {
+    "@deepseek-ai/dsh-subprocess-local@0.1.0-rc.8": true,
+    "koffi@3.1.5": true,
+    "node-pty@1.2.0-beta.15": true
+  },
+  "author": "DeepSeek Harness Plus"
+}

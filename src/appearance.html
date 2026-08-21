@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'unsafe-inline'; script-src 'unsafe-inline'">
+  <title data-i18n="appearance.title">外观设置 — DeepSeek Harness</title>
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh;
+      background: var(--dsh-bg, #0f1115); color: var(--dsh-fg, #e6e6e6);
+      font-family: var(--dsh-ui-font, system-ui, sans-serif); font-size: var(--dsh-font-size, 14px);
+    }
+    .page { max-width: 720px; margin: 0 auto; padding: 28px 24px 40px; }
+    h1 { font-size: 20px; margin: 0 0 6px; }
+    .sub { color: var(--dsh-fg-dim, #9aa4b2); font-size: 13px; line-height: 1.6; margin: 0; }
+    section { margin-top: 26px; }
+    .label { font-size: 13px; color: var(--dsh-fg-soft, #c9d1dc); margin-bottom: 10px; font-weight: 500; }
+    .theme-row { display: flex; gap: 10px; }
+    .theme-option {
+      flex: 1; padding: 14px; border: 1px solid var(--dsh-border, #2a2f3a); border-radius: 10px;
+      background: var(--dsh-bg-card, #161a22); cursor: pointer; text-align: center; font-size: 13px;
+      color: var(--dsh-fg-dim, #9aa4b2); font-family: inherit;
+    }
+    .theme-option:hover { border-color: var(--dsh-border-strong, #3d4e73); }
+    .theme-option.selected { border-color: var(--dsh-accent, #4d7cfe); box-shadow: 0 0 0 1px var(--dsh-accent, #4d7cfe); color: var(--dsh-fg, #e6e6e6); }
+    .swatches { display: flex; gap: 12px; }
+    .swatch { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; padding: 0; }
+    .swatch.selected { border-color: var(--dsh-fg, #e6e6e6); box-shadow: 0 0 0 2px var(--dsh-bg, #0f1115); }
+    select, input[type=range] { accent-color: var(--dsh-accent, #4d7cfe); }
+    select {
+      width: 100%; max-width: 360px; padding: 9px 12px; border-radius: 8px; font-size: 13px;
+      background: var(--dsh-bg-card, #161a22); color: var(--dsh-fg, #e6e6e6);
+      border: 1px solid var(--dsh-border, #2a2f3a); font-family: inherit;
+    }
+    input[type=range] { width: 100%; max-width: 360px; display: block; }
+    .accent-custom { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 12px; color: var(--dsh-fg-dim, #9aa4b2); }
+    input[type=color] { width: 44px; height: 34px; padding: 2px; border-radius: 8px; border: 1px solid var(--dsh-border, #2a2f3a); background: var(--dsh-bg-card, #161a22); cursor: pointer; }
+    textarea {
+      width: 100%; max-width: 640px; min-height: 140px; padding: 10px 12px; border-radius: 8px; font-size: 12px;
+      background: var(--dsh-bg-card, #161a22); color: var(--dsh-fg, #e6e6e6);
+      border: 1px solid var(--dsh-border, #2a2f3a); font-family: var(--dsh-mono-font, Consolas, monospace);
+      resize: vertical; line-height: 1.6;
+    }
+    .size-val { color: var(--dsh-accent, #4d7cfe); font-size: 12px; margin-left: 8px; }
+    .preview {
+      margin-top: 0; padding: 16px 18px; border: 1px solid var(--dsh-border, #2a2f3a); border-radius: 10px;
+      background: var(--dsh-bg-card, #161a22); line-height: 1.7;
+    }
+    .preview code {
+      padding: 2px 6px; border-radius: 5px; font-size: 12px;
+      background: var(--dsh-bg-hover, #182136); border: 1px solid var(--dsh-border, #2a2f3a);
+      font-family: var(--dsh-mono-font, Consolas, monospace);
+    }
+    footer { margin-top: 32px; display: flex; gap: 12px; justify-content: flex-end; }
+    button {
+      padding: 9px 20px; border-radius: 8px; border: 1px solid var(--dsh-border, #2a2f3a);
+      background: var(--dsh-bg-card, #161a22); color: var(--dsh-fg, #e6e6e6); cursor: pointer; font-size: 13px;
+    }
+    button:hover { border-color: var(--dsh-border-strong, #3d4e73); }
+    button.primary { background: var(--dsh-accent, #4d7cfe); color: var(--dsh-accent-fg, #fff); border-color: transparent; }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <h1 data-i18n="appearance.heading">外观设置</h1>
+    <p class="sub" data-i18n="appearance.sub">主题、强调色与字体（界面字体与代码块字体可分开设置）会同时应用到桌面壳页面和 Harness 界面；在 Harness 应用内仍可单独调整主题。字号仅作用于桌面壳页面。自定义强调色与自定义 CSS 为进阶项。</p>
+
+    <section>
+      <div class="label" data-i18n="appearance.lang">语言</div>
+      <select id="lang">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+      </select>
+      <p class="sub" data-i18n="appearance.langSub">切换桌面壳界面语言（中文 / English），立即生效。</p>
+    </section>
+
+    <section>
+      <div class="label" data-i18n="appearance.theme">主题</div>
+      <div class="theme-row">
+        <button class="theme-option" data-theme="dark" data-i18n="appearance.theme.dark">深色</button>
+        <button class="theme-option" data-theme="light" data-i18n="appearance.theme.light">浅色</button>
+        <button class="theme-option" data-theme="system" data-i18n="appearance.theme.system">跟随系统</button>
+      </div>
+    </section>
+
+    <section>
+      <div class="label" data-i18n="appearance.accent">强调色</div>
+      <div class="swatches" id="swatches"></div>
+      <div class="accent-custom"><span data-i18n="appearance.accentCustom">自定义：</span><input type="color" id="accent-custom" value="#4d7cfe"></div>
+    </section>
+
+    <section>
+      <div class="label" data-i18n="appearance.fontUi">界面字体</div>
+      <select id="font"></select>
+    </section>
+
+    <section>
+      <div class="label" data-i18n="appearance.fontCode">代码字体</div>
+      <select id="font-code"></select>
+    </section>
+
+    <section>
+      <div class="label"><span data-i18n="appearance.size">字号</span><span class="size-val" id="size-val"></span></div>
+      <input type="range" id="size" min="12" max="16" step="1">
+    </section>
+
+    <section>
+      <div class="label" data-i18n="appearance.css">自定义 CSS（进阶）</div>
+      <textarea id="custom-css" data-i18n-placeholder="appearance.cssPlaceholder" placeholder="例如：:root { --dsh-border-radius: 8px; }"></textarea>
+      <p class="sub" data-i18n="appearance.cssHint">注入到桌面壳页面与 Harness 界面的样式末尾，保存后立即生效，可覆盖上面的主题 / 强调色变量；留空保存可清除。</p>
+      <button id="save-css" data-i18n="appearance.cssSave">保存自定义 CSS</button>
+    </section>
+
+    <section>
+      <div class="label" data-i18n="appearance.preview">预览</div>
+      <div class="preview" id="preview">DeepSeek Harness 外观预览：中文排版与强调色，代码 <code>const dsh = 'desktop'</code>，以及 12345 数字。</div>
+    </section>
+
+    <footer>
+      <button id="reset" data-i18n="appearance.reset">恢复默认</button>
+      <button id="open-app" class="primary" data-i18n="common.backToApp">返回应用</button>
+    </footer>
+  </div>
+  <script>
+    (function () {
+      var ACCENTS = {
+        blue: '#4d7cfe',
+        green: '#22b573',
+        purple: '#9b6bff',
+        orange: '#f0903c'
+      }
+      var FONTS = [
+        { id: 'system', labelKey: 'appearance.font.system' },
+        { id: 'yahei', labelKey: 'appearance.font.yahei' },
+        { id: 'pingfang', labelKey: 'appearance.font.pingfang' },
+        { id: 'noto', labelKey: 'appearance.font.noto' },
+        { id: 'mono', labelKey: 'appearance.font.mono' },
+        { id: 'serif', labelKey: 'appearance.font.serif' }
+      ]
+      var CODE_FONTS = [
+        { id: 'mono', labelKey: 'appearance.font.mono' },
+        { id: 'system', labelKey: 'appearance.font.system' },
+        { id: 'yahei', labelKey: 'appearance.font.yahei' },
+        { id: 'pingfang', labelKey: 'appearance.font.pingfang' },
+        { id: 'noto', labelKey: 'appearance.font.noto' },
+        { id: 'serif', labelKey: 'appearance.font.serif' }
+      ]
+      var T = {}
+      var currentLang = 'zh'
+
+      function tr(key, params) {
+        var text = T[key] || key
+        if (params) {
+          for (var name in params) {
+            text = text.split('{' + name + '}').join(String(params[name]))
+          }
+        }
+        return text
+      }
+
+      function applyStatic() {
+        document.querySelectorAll('[data-i18n]').forEach(function (el) {
+          var key = el.getAttribute('data-i18n')
+          if (T[key]) el.textContent = T[key]
+        })
+        document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+          var key = el.getAttribute('data-i18n-placeholder')
+          if (T[key]) el.placeholder = T[key]
+        })
+        document.documentElement.lang = currentLang === 'en' ? 'en' : 'zh-CN'
+        var preview = document.getElementById('preview')
+        if (preview) preview.innerHTML = tr('appearance.previewText', { code: "<code>const dsh = 'desktop'</code>" })
+      }
+
+      var lastAppearance = null
+
+      function buildControls(s) {
+        lastAppearance = s
+        var langSel = document.getElementById('lang')
+        langSel.value = s.lang || 'zh'
+
+        var themeButtons = document.querySelectorAll('.theme-option')
+        for (var i = 0; i < themeButtons.length; i++) {
+          var btn = themeButtons[i]
+          btn.classList.toggle('selected', btn.dataset.theme === s.theme)
+          btn.onclick = function () { window.desktop.setAppearance({ theme: this.dataset.theme }) }
+        }
+
+        var sw = document.getElementById('swatches')
+        sw.innerHTML = ''
+        Object.keys(ACCENTS).forEach(function (id) {
+          var el = document.createElement('button')
+          el.className = 'swatch' + (id === s.accent ? ' selected' : '')
+          el.style.background = ACCENTS[id]
+          el.title = id
+          el.onclick = function () { window.desktop.setAppearance({ accent: id }) }
+          sw.appendChild(el)
+        })
+
+        var custom = document.getElementById('accent-custom')
+        custom.value = ACCENTS[s.accent] || s.accent
+        custom.oninput = function () { window.desktop.setAppearance({ accent: custom.value }) }
+
+        function fillFontSelect(sel, list, value) {
+          sel.innerHTML = ''
+          list.forEach(function (f) {
+            var opt = document.createElement('option')
+            opt.value = f.id
+            opt.textContent = tr(f.labelKey)
+            sel.appendChild(opt)
+          })
+          sel.value = value
+        }
+
+        var sel = document.getElementById('font')
+        fillFontSelect(sel, FONTS, s.fontFamily)
+        sel.onchange = function () { window.desktop.setAppearance({ fontFamily: sel.value }) }
+
+        var codeSel = document.getElementById('font-code')
+        fillFontSelect(codeSel, CODE_FONTS, s.fontFamilyCode || 'mono')
+        codeSel.onchange = function () { window.desktop.setAppearance({ fontFamilyCode: codeSel.value }) }
+
+        var range = document.getElementById('size')
+        range.value = String(s.fontSize)
+        document.getElementById('size-val').textContent = s.fontSize + 'px'
+        range.oninput = function () {
+          document.getElementById('size-val').textContent = range.value + 'px'
+          window.desktop.setAppearance({ fontSize: Number(range.value) })
+        }
+
+        var cssEl = document.getElementById('custom-css')
+        if (cssEl) cssEl.value = s.customCss || ''
+      }
+
+      function init() {
+        window.desktop.getI18n().then(function (res) {
+          if (res) { T = res.messages || {}; currentLang = res.lang || 'zh' }
+          applyStatic()
+          if (lastAppearance) buildControls(lastAppearance)
+        }).catch(function () {})
+        window.desktop.getAppearance().then(buildControls).catch(function () {})
+      }
+
+      init()
+
+      window.desktop.onAppearanceChanged(function (s) {
+        if (s && s.lang && s.lang !== currentLang) {
+          window.desktop.getI18n().then(function (res) {
+            if (res) { T = res.messages || {}; currentLang = res.lang || 'zh' }
+            applyStatic()
+            buildControls(s)
+          }).catch(function () {})
+        } else {
+          buildControls(s)
+        }
+      })
+
+      document.getElementById('lang').addEventListener('change', function () {
+        window.desktop.setAppearance({ lang: this.value })
+      })
+      document.getElementById('save-css').addEventListener('click', function () {
+        window.desktop.setAppearance({ customCss: document.getElementById('custom-css').value })
+      })
+      document.getElementById('reset').addEventListener('click', function () {
+        window.desktop.setAppearance({ theme: 'dark', accent: 'blue', fontFamily: 'system', fontFamilyCode: 'mono', fontSize: 13, customCss: '' })
+      })
+      document.getElementById('open-app').addEventListener('click', function () {
+        window.desktop.openApp()
+      })
+    })()
+  </script>
+</body>
+</html>
