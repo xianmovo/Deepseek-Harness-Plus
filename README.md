@@ -26,6 +26,7 @@ assets/tray.png     # 托盘图标（32x32，由 scripts/gen-tray-icon.js 生成
 scripts/gen-tray-icon.js # 生成托盘图标的零依赖 Node 脚本
 scripts/install-wallpaper-plugin.js # 向 web profile 预装壁纸插件（dsh-wallpaper-ui）
 scripts/install-all-plugins.js      # 向 web profile 预装目录中的全部 6 个插件
+scripts/patch-dsh-directory-picker.js # postinstall：修复 npm 发布包中 koffi.view 在 Node 24（Electron 内置 Node）下的崩溃
 test/mock-dsh.js    # 无真实运行时的桩服务器（记录 argv，便于断言 --patch 拼接）
 test/wizard-check.js# 无头检查引导页渲染与 IPC 往返
 test/pages-check.js # 无头检查调试页 / 外观页 / 关于页 / 第三方组件页渲染与 IPC 往返

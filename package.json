@@ -6,6 +6,7 @@
   "main": "src/main.js",
   "scripts": {
     "start": "electron .",
+    "postinstall": "node scripts/patch-dsh-directory-picker.js",
     "smoke": "electron . --smoke-test",
     "wizard-check": "electron test/wizard-check.js",
     "pages-check": "electron test/pages-check.js",
