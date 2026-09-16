@@ -25,8 +25,7 @@ src/appearance.html # 外观页：换肤 / 自定义强调色 / 界面与代码�
 assets/tray.png     # 托盘图标（32x32，由 scripts/gen-tray-icon.js 生成）
 scripts/gen-tray-icon.js # 生成托盘图标的零依赖 Node 脚本
 scripts/install-wallpaper-plugin.js # 向 web profile 预装壁纸插件（dsh-wallpaper-ui）
-scripts/install-all-plugins.js      # 向 web profile 预装目录中的全部 6 个插件
-scripts/patch-dsh-directory-picker.js # postinstall：修复 npm 发布包中 koffi.view 在 Node 24（Electron 内置 Node）下的崩溃
+scripts/install-all-plugins.js      # 向 web profile 预装目录中的全部 5 个插件
 test/mock-dsh.js    # 无真实运行时的桩服务器（记录 argv，便于断言 --patch 拼接）
 test/wizard-check.js# 无头检查引导页渲染与 IPC 往返
 test/pages-check.js # 无头检查调试页 / 外观页 / 关于页 / 第三方组件页渲染与 IPC 往返
@@ -124,16 +123,15 @@ node scripts/install-wallpaper-plugin.js   # 需要 pnpm（corepack enable 或 n
 卸载：`dsh plugin --profile web remove dsh-wallpaper-ui` 后再手动移除别名依赖
 （`dsh plugin --profile web remove dsh-wallpaper`）。
 
-> 兼容性：插件 peerDependencies 声明为 `^0.1.0-rc.6`，在 rc.8 上已验证可加载
-> （`/dsh-wallpaper/api/state` 返回 200，客户端模块注入启动清单）。
+> 兼容性：插件 peerDependencies 声明为 `^0.1.0-rc.6`，在打包的 0.1.6-alpha.1 运行时上
+> 已验证可加载（把它单独加进 `dsh.profile.bundles` 启动，不报导入错误）。
 
-除壁纸外，还预装了实时统计、Git 图谱、远程 SSH、配置备份 / 迁移、任务看板等共 6 个
-第三方插件，全部打进 dsh web profile，随桌面应用自动加载（不再需要应用内安装）：
+除壁纸外，还预装了 Git 图谱、远程 SSH、配置备份 / 迁移、任务看板等共 5 个第三方插件，
+全部打进 dsh web profile，随桌面应用自动加载（不再需要应用内安装）：
 
 | 插件 | 说明 |
 | --- | --- |
 | 壁纸背景（dsh-wallpaper-ui） | 图片 / GIF / MP4 / WebM 壁纸，五种铺满模式，透明度 / 亮度 / 模糊 / 遮罩调节 |
-| 实时统计（@linxin666/dsh-live-stats） | Web 界面实时显示 token 估算与生成吞吐 |
 | Git 图谱（@linxin666/dsh-client-ui-git-graph） | 空白会话的分支选择器 + Git 图谱 |
 | 远程 SSH（@linxin666/dsh-ssh） | 远程主机配置、SSH 终端、SFTP 传输、本地端口转发 |
 | 配置备份 / 迁移（dsh-config-manager） | DSH 配置的备份、导出、导入与迁移 |

@@ -24,7 +24,7 @@ const THIRD_PARTY = [
   { name: '@deepseek-ai/dsh-scope', version: '', license: 'MIT', link: 'https://github.com/deepseek-ai/deepseek-harness', category: 'runtime', zh: '作用域策略', en: 'Scope policy' },
   { name: '@deepseek-ai/dsh-output-retention', version: '', license: 'MIT', link: 'https://github.com/deepseek-ai/deepseek-harness', category: 'runtime', zh: '输出保留策略', en: 'Output retention policy' },
   { name: '@deepseek-ai/dsh-invariants', version: '', license: 'MIT', link: 'https://github.com/deepseek-ai/deepseek-harness', category: 'runtime', zh: '运行时不变量检查', en: 'Runtime invariant checks' },
-  { name: '@deepseek-ai/dsh-code-runtime', version: '', license: 'MIT', link: 'https://github.com/deepseek-ai/deepseek-harness', category: 'runtime', zh: '代码执行运行时', en: 'Code execution runtime' },
+  { name: '@deepseek-ai/dsh-ptc-runtime-node', version: '', license: 'MIT', link: 'https://github.com/deepseek-ai/deepseek-harness', category: 'runtime', zh: '代码执行运行时', en: 'Code execution runtime' },
   { name: '@deepseek-ai/dsh-atomic-write', version: '', license: 'MIT', link: 'https://github.com/deepseek-ai/deepseek-harness', category: 'runtime', zh: '原子写入', en: 'Atomic writes' },
   { name: '@deepseek-ai/dsh-anonymous-user-id', version: '', license: 'MIT', link: 'https://github.com/deepseek-ai/deepseek-harness', category: 'runtime', zh: '匿名用户标识', en: 'Anonymous user identity' },
   { name: '@deepseek-ai/dsh-subagent-in-process-driver', version: '', license: 'MIT', link: 'https://github.com/deepseek-ai/deepseek-harness', category: 'runtime', zh: '子代理（进程内）驱动', en: 'Subagent (in-process) driver' },
@@ -32,7 +32,6 @@ const THIRD_PARTY = [
 
   // ---- preinstalled plugins (installed into ~/.dsh/profiles/web) ----
   { name: 'dsh-wallpaper-ui', version: '', license: 'MIT', link: 'https://www.npmjs.com/package/dsh-wallpaper-ui', category: 'plugin', zh: '壁纸背景（图片 / GIF / 视频，五种铺满模式）', en: 'Wallpaper backgrounds (image / GIF / video, five fit modes)' },
-  { name: '@linxin666/dsh-live-stats', version: '', license: 'Apache-2.0', link: 'https://www.npmjs.com/package/@linxin666/dsh-live-stats', category: 'plugin', zh: '实时 Token 统计与生成吞吐', en: 'Live token statistics and generation throughput' },
   { name: '@linxin666/dsh-client-ui-git-graph', version: '', license: 'Apache-2.0', link: 'https://www.npmjs.com/package/@linxin666/dsh-client-ui-git-graph', category: 'plugin', zh: 'Git 图谱与分支选择器', en: 'Git graph and branch picker' },
   { name: '@linxin666/dsh-ssh', version: '', license: 'Apache-2.0', link: 'https://www.npmjs.com/package/@linxin666/dsh-ssh', category: 'plugin', zh: '远程 SSH / SFTP / 端口转发', en: 'Remote SSH / SFTP / port forwarding' },
   { name: '@linxin666/dsh-client-ui-task-board', version: '', license: 'Apache-2.0', link: 'https://www.npmjs.com/package/@linxin666/dsh-client-ui-task-board', category: 'plugin', zh: '任务看板（定时调度与空闲保护）', en: 'Task board (scheduled runs and idle guard)' },

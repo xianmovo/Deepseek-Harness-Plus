@@ -661,7 +661,10 @@ function watchWindowTest() {
   }
   contents.once('did-finish-load', () => {
     const url = contents.getURL()
-    finish(Boolean(serverUrl) && url.startsWith(serverUrl), `loaded ${url}`)
+    // The launch token buys the session cookie and redirects to the clean
+    // origin root, so the loaded URL is never the announced token URL.
+    const root = serverUrl === null ? null : new URL(serverUrl).origin + '/'
+    finish(root !== null && url === root, `loaded ${url}`)
   })
   contents.once('did-fail-load', (_event, code, description, url) => {
     finish(false, `did-fail-load ${String(code)} ${description} ${url}`)
@@ -669,27 +672,51 @@ function watchWindowTest() {
   setTimeout(() => finish(false, 'window load timed out'), STALL_TIMEOUT_MS)
 }
 
-/** Smoke test: GET the discovered URL and report HTTP 200 + a non-empty body. */
+/** Read one probe response to completion and hand its byte count to the caller. */
+function readProbeBody(response, done) {
+  let bytes = 0
+  response.on('data', (chunk) => { bytes += chunk.length })
+  response.on('end', () => { done(bytes) })
+}
+
+/**
+ * Smoke test: run the launch-token handshake (`/?token=` answers 303 with the
+ * session cookie), then GET the application root the way the window does and
+ * report HTTP 200 + a non-empty body.
+ */
 function verifyServer(attempt = 1) {
   const request = http.get(serverUrl, { timeout: STALL_TIMEOUT_MS }, (response) => {
-    let bytes = 0
-    response.on('data', (chunk) => { bytes += chunk.length })
-    response.on('end', () => {
+    const location = response.headers.location
+    const setCookie = response.headers['set-cookie']
+    if (response.statusCode !== 303 || location === undefined || setCookie === undefined) {
+      readProbeBody(response, (bytes) => {
+        finishSmoke(false, `GET ${serverUrl} -> ${String(response.statusCode)}, ${bytes} bytes (expected 303 + launch cookie)`)
+      })
+      return
+    }
+    response.resume()
+    verifyAuthenticatedRoot(new URL(location, serverUrl), setCookie[0].split(';')[0], attempt)
+  })
+  request.on('timeout', () => { request.destroy(new Error('GET timed out')) })
+  request.on('error', (error) => { retryProbe(attempt, `GET ${serverUrl} failed: ${error.message}`) })
+}
+
+/** GET the cookie-authenticated application root; a non-empty 200 is the pass condition. */
+function verifyAuthenticatedRoot(target, cookie, attempt) {
+  const request = http.get(target, { timeout: STALL_TIMEOUT_MS, headers: { cookie } }, (response) => {
+    readProbeBody(response, (bytes) => {
       const ok = response.statusCode === 200 && bytes > 0
-      finishSmoke(ok, `GET ${serverUrl} -> ${String(response.statusCode)}, ${bytes} bytes`)
+      finishSmoke(ok, `GET ${target.href} (launch cookie) -> ${String(response.statusCode)}, ${bytes} bytes`)
     })
   })
   request.on('timeout', () => { request.destroy(new Error('GET timed out')) })
-  request.on('error', (error) => {
-    // The URL line is announced after the Loader tree settles, but the very
-    // first connection can still race server readiness on loopback; retry
-    // briefly before declaring failure.
-    if (attempt < 6) {
-      setTimeout(() => verifyServer(attempt + 1), 500)
-    } else {
-      finishSmoke(false, `GET ${serverUrl} failed: ${error.message}`)
-    }
-  })
+  request.on('error', (error) => { retryProbe(attempt, `GET ${target.href} failed: ${error.message}`) })
+}
+
+/** Retry the whole probe briefly: the announced URL can still race server readiness on loopback. */
+function retryProbe(attempt, message) {
+  if (attempt < 6) setTimeout(() => verifyServer(attempt + 1), 500)
+  else finishSmoke(false, message)
 }
 
 /** Best-effort kill of this process's direct children and their trees. */

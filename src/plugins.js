@@ -30,14 +30,6 @@ const PLUGIN_CATALOG = [
     description: '图片 / GIF / MP4 / WebM 壁纸，五种铺满模式，透明度 / 亮度 / 模糊 / 遮罩调节，本地上传 + URL。',
   },
   {
-    id: 'live-stats',
-    spec: '@linxin666/dsh-live-stats',
-    name: '实时统计',
-    category: '效率',
-    verified: false,
-    description: 'Web 界面实时显示 token 估算与生成吞吐。',
-  },
-  {
     id: 'git-graph',
     spec: '@linxin666/dsh-client-ui-git-graph',
     name: 'Git 图谱',
