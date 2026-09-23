@@ -10,8 +10,10 @@
     "install-wallpaper": "node scripts/install-wallpaper-plugin.js",
     "no-console-check": "node test/no-console-check.js",
     "pages-check": "electron test/pages-check.js",
+    "postinstall": "node scripts/patch-win32-process-console.js",
     "smoke": "electron . --smoke-test",
     "start": "electron .",
+    "win32-console-check": "node test/win32-console-check.js",
     "wizard-check": "electron test/wizard-check.js"
   },
   "dependencies": {
