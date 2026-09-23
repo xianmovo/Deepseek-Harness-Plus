@@ -1,14 +1,19 @@
-﻿'use strict'
+'use strict'
 
 // Plugin catalog + provisioning for the dsh web profile, shared by the
-// desktop plugin page (IPC) and scripts/install-wallpaper-plugin.js.
+// desktop preinstall scripts.
 //
-// Plugins install into ~/.dsh/profiles/web via `dsh plugin --profile web
-// add <spec>` (a thin pnpm forwarder). dsh-wallpaper-ui@0.1.3 ships a bundle
-// patch that imports the module name `dsh-wallpaper` while the npm package is
-// `dsh-wallpaper-ui`, so it needs an extra pnpm alias (dsh-wallpaper ->
-// dsh-wallpaper-ui) and the alias must stay OUT of dsh.profile.bundles or the
-// same patch applies twice and fails with `duplicate loader entry id`.
+// Plugins install into ~/.dsh/profiles/web through `dsh plugin --profile web
+// add <spec>` (a thin pnpm forwarder). That command reconciles
+// `dsh.profile.bundles` against the installed dependencies and adds every
+// dependency whose manifest declares `dsh.bundle`, so one plugin must be
+// installed under exactly one name: installing its package both directly and
+// under an alias applies the bundle patch twice and fails the boot with
+// `duplicate loader entry id`.
+//
+// dsh-wallpaper-ui is that case. Its cordis patch inserts a loader entry that
+// imports the name `dsh-wallpaper`, so the package installs under that alias
+// only and never under its own name.
 
 const { spawn } = require('node:child_process')
 const fs = require('node:fs')
@@ -16,25 +21,27 @@ const os = require('node:os')
 const path = require('node:path')
 
 const PROFILE = 'web'
-const WALLPAPER_SPEC = 'dsh-wallpaper-ui'
+/** Dependency key the wallpaper plugin installs under. */
 const WALLPAPER_ALIAS = 'dsh-wallpaper'
+/** Install argument that points the wallpaper alias at the published package. */
+const WALLPAPER_SPEC = `${WALLPAPER_ALIAS}@npm:dsh-wallpaper-ui@^0.1.3`
 
-/** Catalog surfaced by the plugin page. `verified` = tested on @deepseek-ai/dsh rc.8. */
+/** Catalog of preinstalled plugins. `spec` is the profile dependency key. */
 const PLUGIN_CATALOG = [
   {
     id: 'wallpaper',
-    spec: WALLPAPER_SPEC,
+    spec: WALLPAPER_ALIAS,
+    installSpec: WALLPAPER_SPEC,
     name: '壁纸背景',
     category: '外观',
-    verified: true,
-    description: '图片 / GIF / MP4 / WebM 壁纸，五种铺满模式，透明度 / 亮度 / 模糊 / 遮罩调节，本地上传 + URL。',
+    description:
+      '图片 / GIF / MP4 / WebM 壁纸，五种铺满模式，透明度 / 亮度 / 模糊 / 遮罩调节，本地上传 + URL。',
   },
   {
     id: 'git-graph',
     spec: '@linxin666/dsh-client-ui-git-graph',
     name: 'Git 图谱',
     category: '开发',
-    verified: false,
     description: '空白会话的分支选择器 + Git 图谱，宿主侧真实 git 操作。',
   },
   {
@@ -42,7 +49,6 @@ const PLUGIN_CATALOG = [
     spec: '@linxin666/dsh-ssh',
     name: '远程 SSH',
     category: '开发',
-    verified: false,
     description: '远程主机配置、SSH 终端、SFTP 传输、本地端口转发。',
   },
   {
@@ -50,7 +56,6 @@ const PLUGIN_CATALOG = [
     spec: 'dsh-config-manager',
     name: '配置备份 / 迁移',
     category: '工具',
-    verified: false,
     description: 'DSH 配置的备份、导出、导入与迁移（带 Web UI）。',
   },
   {
@@ -58,13 +63,25 @@ const PLUGIN_CATALOG = [
     spec: '@linxin666/dsh-client-ui-task-board',
     name: '任务看板',
     category: '效率',
-    verified: false,
     description: '宿主权威的任务看板，支持定时调度与空闲保护。',
   },
 ]
 
+/** Directory of the web profile. */
 function profileDir() {
   return path.join(os.homedir(), '.dsh', 'profiles', PROFILE)
+}
+
+/** One catalog entry by id. */
+function catalogEntry(id) {
+  const entry = PLUGIN_CATALOG.find((candidate) => candidate.id === id)
+  if (!entry) throw new Error(`unknown plugin id: ${id}`)
+  return entry
+}
+
+/** Install argument for an entry: the aliased spec where the package name differs. */
+function installSpecOf(entry) {
+  return entry.installSpec ?? entry.spec
 }
 
 function manifestPath() {
@@ -77,11 +94,6 @@ function readManifest() {
   } catch {
     return { dependencies: {} }
   }
-}
-
-function writeManifest(pkg) {
-  fs.mkdirSync(profileDir(), { recursive: true })
-  fs.writeFileSync(manifestPath(), JSON.stringify(pkg, null, 2) + '\n', 'utf8')
 }
 
 function dshBinPath() {
@@ -120,34 +132,15 @@ async function runDshPluginRetry(args) {
   }
 }
 
-/** Ensure the wallpaper alias stays out of dsh.profile.bundles (duplicate entry id). */
-function enforceWallpaperBundles() {
-  const pkg = readManifest()
-  const bundles = pkg.dsh?.profile?.bundles ?? []
-  const cleaned = bundles.filter((entry) => entry !== WALLPAPER_ALIAS)
-  if (cleaned.length === bundles.length) return false
-  pkg.dsh = { ...pkg.dsh, profile: { ...pkg.dsh.profile, bundles: cleaned } }
-  writeManifest(pkg)
-  return true
-}
-
-/** Install a catalog plugin by spec; returns the updated status list. */
-async function installPlugin(spec) {
-  await runDshPluginRetry(['add', spec])
-  if (spec === WALLPAPER_SPEC) {
-    await runDshPluginRetry(['add', `${WALLPAPER_ALIAS}@npm:${WALLPAPER_SPEC}@^0.1.3`])
-    enforceWallpaperBundles()
-  }
+/** Install one catalog entry and return the refreshed status list. */
+async function installPlugin(entry) {
+  await runDshPluginRetry(['add', installSpecOf(entry)])
   return listPlugins()
 }
 
-/** Uninstall a catalog plugin by spec; returns the updated status list. */
-async function uninstallPlugin(spec) {
-  await runDshPluginRetry(['remove', spec])
-  if (spec === WALLPAPER_SPEC) {
-    await runDshPluginRetry(['remove', WALLPAPER_ALIAS]).catch(() => {})
-    enforceWallpaperBundles()
-  }
+/** Remove one catalog entry and return the refreshed status list. */
+async function uninstallPlugin(entry) {
+  await runDshPluginRetry(['remove', entry.spec])
   return listPlugins()
 }
 
@@ -163,14 +156,13 @@ function listPlugins() {
   }))
 }
 
-
-
 function openPluginProfile() {
   return profileDir()
 }
 
 module.exports = {
   PLUGIN_CATALOG,
+  catalogEntry,
   installPlugin,
   listPlugins,
   openPluginProfile,

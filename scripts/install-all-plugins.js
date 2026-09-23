@@ -10,7 +10,7 @@
 
 const fs = require('node:fs')
 const path = require('node:path')
-const { PLUGIN_CATALOG, installPlugin, listPlugins, profileDir, WALLPAPER_ALIAS } = require('../src/plugins.js')
+const { PLUGIN_CATALOG, installPlugin, listPlugins, profileDir } = require('../src/plugins.js')
 
 const NATIVE_BUILD_DEPS = ['ssh2', 'cpu-features']
 
@@ -39,7 +39,7 @@ async function main() {
     }
     process.stdout.write(`  installing ${entry.name} (${entry.spec}) ... `)
     try {
-      await installPlugin(entry.spec)
+      await installPlugin(entry)
       console.log('ok')
     } catch (error) {
       console.log('FAILED')
@@ -47,9 +47,6 @@ async function main() {
       process.exitCode = 1
     }
   }
-  // The dsh CLI can re-add the wallpaper alias to dsh.profile.bundles during a
-  // later reconcile; strip it again so the wallpaper patch is not applied twice.
-  ensureWallpaperBundles()
   console.log('\nResult:')
   for (const p of listPlugins()) {
     console.log(`  [${p.installed ? 'x' : ' '}] ${p.name} (${p.spec}) enabled=${p.enabled}`)
@@ -58,18 +55,6 @@ async function main() {
     console.error('\nSome plugins failed to install; see the messages above.')
     process.exit(process.exitCode)
   }
-}
-
-/** Remove the wallpaper alias from dsh.profile.bundles (duplicate loader entry id). */
-function ensureWallpaperBundles() {
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(profileDir(), 'package.json'), 'utf8'))
-    const bundles = pkg.dsh?.profile?.bundles ?? []
-    const cleaned = bundles.filter((entry) => entry !== WALLPAPER_ALIAS)
-    if (cleaned.length === bundles.length) return
-    pkg.dsh = { ...pkg.dsh, profile: { ...pkg.dsh.profile, bundles: cleaned } }
-    fs.writeFileSync(path.join(profileDir(), 'package.json'), JSON.stringify(pkg, null, 2) + '\n', 'utf8')
-  } catch { /* best effort */ }
 }
 
 void main()

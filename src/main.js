@@ -24,6 +24,9 @@ const START_TIMEOUT_MS = Number(process.env.DSH_DESKTOP_START_TIMEOUT_MS ?? 120_
 const STALL_TIMEOUT_MS = 20_000
 const STDOUT_BUFFER_MAX = 64 * 1024
 const TASKKILL = path.join(process.env.SystemRoot ?? 'C:\\Windows', 'System32', 'taskkill.exe')
+
+/** Preload that removes the console window Windows gives every child process. */
+const NO_CONSOLE_WINDOW = path.join(__dirname, 'no-console-window.js')
 const LOG_FILE_NAME = 'dsh-desktop.log'
 const LOG_FILE_MAX_BYTES = 5 * 1024 * 1024
 const SERVER_AUTO_RESTART_MAX = 3
@@ -438,10 +441,11 @@ function resolveLaunch() {
     // plain Node process, so the harness runs on the Electron-bundled Node
     // with no external Node or GUI dependency. --expose-internals must come
     // first: the dsh base composition mounts cordis-plugin-hmr, which refuses
-    // to start without it.
+    // to start without it. --require then suppresses the console window
+    // Windows would otherwise create for every process the harness spawns.
     return {
       command: process.execPath,
-      args: ['--expose-internals', binPath, 'web', ...patchArgs(patch), '--no-open', '--port', '0'],
+      args: ['--expose-internals', '--require', NO_CONSOLE_WINDOW, binPath, 'web', ...patchArgs(patch), '--no-open', '--port', '0'],
       envExtra: { ELECTRON_RUN_AS_NODE: '1' },
     }
   }

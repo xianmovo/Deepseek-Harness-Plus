@@ -5,13 +5,14 @@
   "description": "DeepSeek Harness 桌面版（本地 dsh web + Electron 壳）",
   "main": "src/main.js",
   "scripts": {
-    "start": "electron .",
-    "smoke": "electron . --smoke-test",
-    "wizard-check": "electron test/wizard-check.js",
-    "pages-check": "electron test/pages-check.js",
-    "install-wallpaper": "node scripts/install-wallpaper-plugin.js",
+    "gen-icon": "node scripts/gen-icon.js",
     "install-all-plugins": "node scripts/install-all-plugins.js",
-    "gen-icon": "node scripts/gen-icon.js"
+    "install-wallpaper": "node scripts/install-wallpaper-plugin.js",
+    "no-console-check": "node test/no-console-check.js",
+    "pages-check": "electron test/pages-check.js",
+    "smoke": "electron . --smoke-test",
+    "start": "electron .",
+    "wizard-check": "electron test/wizard-check.js"
   },
   "dependencies": {
     "@deepseek-ai/cordis-plugin-group": "1.0.2",
